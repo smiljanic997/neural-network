@@ -9,15 +9,12 @@ class Network :
 
     max_error = 0.00001
 
-    # Tezine su podijeljene u 2 matrice. Jedna matrica za veze izmedju ulaza i 
-    # skrivenog sloja, a druga za veze izmedju skrivenog sloja i izlaza.
-    # Dimenzije matrica su:
-    #          Input_Hidden matrica : br_neurona_skrivenog_sloja * broj_ulaza
-    #          Hidden_Output matrica : broj_izlaza * br_neurona_skrivenog_sloja
-    # Bias-i su predstavljeni sa dva vektora-kolone sljedecih dimenzija:
-    #          Bias skrivenog sloja : br_neurona_skrivenog_sloja
-    #          Bias izlaznog sloja : broj_izlaza
     def __init__(self, number_of_inputs, number_of_outputs, hidden_layer_count, learning_rate):
+        """
+            Weights are divided into two matrices. One for input-to-hidden layer and one for
+            hidden-to-output layer.
+            Biases are represented as two vectors, one for hidden and one for output layer.
+        """
         self.number_of_inputs = number_of_inputs
         self.number_of_outputs = number_of_outputs
         self.hidden_layer_count = hidden_layer_count
@@ -28,24 +25,24 @@ class Network :
         self.learning_rate = learning_rate
 
     
-    # Prihvata dva broja kao array, te vraca izlaz mreze.
     def feedforward(self, input_array):
+        """
+            Accepts two numbers as input array and returns network and hidden layer output.
+        """
         input_matrix = np.reshape(input_array, (self.number_of_inputs, 1))
-        # sigmoid_vectorized = np.vectorize(sigmoid)
         hidden_layer_output = self.sigmoid_vectorized(np.add(np.dot(self.weight_matrix_ih, input_matrix), self.bias_hidden))
         network_output = np.add(np.dot(self.weight_matrix_ho, hidden_layer_output), self.bias_out)
-        # return network_output.flatten(), hidden_layer_output
         return self.rel_vectorized(network_output.flatten()), hidden_layer_output
 
     
-    # Prihvata trening parove i koriguje matrice tezina i bias-e.
     def train(self, input_array, target_array):
+        """
+            Accepts training pairs and changes weight matrices with backpropagation algorithm.
+        """
         iter = 0
-        real_iter = 0
         while True:
             iter = iter + 1
             cumulative_error = 0
-            real_iter = 0
             for input, target in zip(input_array, target_array):
                 net_outputs, hidden_output = self.feedforward(input)
                 net_outputs = np.reshape(net_outputs, (self.number_of_outputs, 1))
@@ -78,24 +75,22 @@ class Network :
                     input_to_hidden_deltas = np.dot(hidden_gradient, input_transposed)
                     self.weight_matrix_ih = np.add(self.weight_matrix_ih, input_to_hidden_deltas)
                     self.bias_hidden = np.add(self.bias_hidden, hidden_gradient)
-            print(real_iter)
             if cumulative_error < self.max_error or iter > 50000:
                 break
-        print('cumulative error ->', cumulative_error)
         return net_outputs
 
     
     def write_weights_to_csv(self):
-        if not os.path.exists('weightsA'):
-            os.makedirs('weightsA')
+        if not os.path.exists('weights'):
+            os.makedirs('weights')
         df_for_ih = pd.DataFrame(data = self.weight_matrix_ih.astype(float))
-        df_for_ih.to_csv('weightsA/ih_matrix.csv', index = False, header = False, float_format = '%.10f')
+        df_for_ih.to_csv('weights/ih_matrix.csv', index = False, header = False, float_format = '%.10f')
         df_for_ho = pd.DataFrame(data = self.weight_matrix_ho.astype(float))
-        df_for_ho.to_csv('weightsA/ho_matrix.csv', index = False, header = False, float_format = '%.10f')
+        df_for_ho.to_csv('weights/ho_matrix.csv', index = False, header = False, float_format = '%.10f')
         df_for_hb = pd.DataFrame(data = self.bias_hidden.astype(float))
-        df_for_hb.to_csv('weightsA/bias_hidden_matrix.csv', index = False, header = False, float_format = '%.10f')
+        df_for_hb.to_csv('weights/bias_hidden_matrix.csv', index = False, header = False, float_format = '%.10f')
         df_for_ob = pd.DataFrame(data = self.bias_out.astype(float))
-        df_for_ob.to_csv('weightsA/bias_out_matrix.csv', index = False, header = False, float_format = '%.10f')
+        df_for_ob.to_csv('weights/bias_out_matrix.csv', index = False, header = False, float_format = '%.10f')
 
     
     def load_weights_and_biases(self):
